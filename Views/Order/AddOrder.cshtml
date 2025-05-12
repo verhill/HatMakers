@@ -1,0 +1,126 @@
+﻿@model NewOrderViewModel
+
+<div class="border box-shadow p-3">
+    <h2 class="text-center text-decoration-underline mb-3">Orderinformation</h2>
+    <div asp-validation-summary="All" class="text-danger"></div>
+<form id="orderForm" class="hide" asp-controller="Order" asp-action="CreateNewOrder" method="post">
+            <label style="margin-top: 1rem; font-weight: bold;">Skickas till kund: </label>
+            <input disabled style="width: 40%;" asp-for="@Model.CurrentOrder.Customer.Email" />
+            <br />
+            <label style="margin-top: 1rem; font-weight: bold;">Leveransdatum: </label>
+            <input id="delivery" type="date" style="width: 40%;" asp-for="@Model.CurrentOrder.DeliveryDate" />
+            <br />
+            <label style="margin-top: 1rem; font-weight: bold;">Leveransadress: </label>
+            <input id="address" type="text" style="width: 40%;" asp-for="@Model.CurrentOrder.DeliveryAddress" />
+            <br />
+            <label style="margin-top: 1rem; font-weight: bold;">Expressleverans: </label>
+            <input type="checkbox" asp-for="@Model.CurrentOrder.ExpressDelivery" />
+            <br />
+            <label style="margin-top: 1rem; font-weight: bold;">Eventuella tull-siffror: </label>
+            <input id="customsNumbers" type="text" style="width: 40%;" asp-for="@Model.CurrentOrder.CustomsNumbers" />
+            <br />
+            <label style="margin-top: 1rem; font-weight: bold;">Summa: </label>
+            <input readonly style="width: 20%;" asp-for="@Model.CurrentOrder.TotPrice" />
+            <br />
+            
+            <div disabled style="width: 70%; height: 30%;">
+        <table class="table mt-5">
+            <thead>
+                <tr style="font-size: 1.5rem;">
+                    <th>Produkt</th>
+                    <th>Omkrets</th>
+                    <th>Höjd</th>
+                    <th>Pris</th>
+                    <th>Bild</th>
+                    <th>Beskrivning</th>
+                </tr>
+                </thead>
+                <tbody>
+            
+                @foreach (Order_Contains_Hat och in Model.OrderContainsHats)
+                {
+                    <tr>
+                        <td>@och.Hat.Name</td>
+                        <td>@och.HeadSize</td>
+                        <td>@och.Height</td>
+                        <td>@och.Hat.Price</td>
+                        <td><img style="height: 100px; width: 100px;" src="@och.Hat.Picture" alt="Bild på produkt" /></td>
+                        <td>@och.Hat.SpecialDescription</td>
+                    </tr>
+                }
+                </tbody>
+        </table>
+
+            </div>
+            <br />
+            <input type="hidden" name="customerId" value="@Model.CurrentOrder.Customer.CID" />
+            <input type="hidden" name="totPrice" value="@Model.CurrentOrder.TotPrice" />
+                @for (int i = 0; i < Model.OrderContainsHats.Count; i++)
+                {
+                    <input type="hidden" name="hatsInOrder" value="@Model.OrderContainsHats[i].HatId" />
+                    <input type="hidden" name="headSizes" value="@Model.OrderContainsHats[i].HeadSize" />
+                    <input type="hidden" name="heights" value="@Model.OrderContainsHats[i].Height" />
+                }
+
+
+        <button id="submitButton" class="btn btn-primary" style="margin-top: 1rem;" type="submit">Lägg beställning</button>
+    </form>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const expressCheckbox = document.querySelector('input[name="CurrentOrder.ExpressDelivery"]');
+        const totPriceInput = document.querySelector('input[name="CurrentOrder.TotPrice"]');
+        const deliveryInput = document.getElementById("delivery");
+        const addressInput = document.getElementById("address");
+        const button = document.getElementById("submitButton");
+        const customsNumber = document.getElementById("customsNumbers");
+
+        let originalPrice = parseFloat(totPriceInput.value);
+
+        // Hantera expressleverans
+        expressCheckbox.addEventListener('change', function () {
+            if (this.checked) {
+                totPriceInput.value = (originalPrice * 1.2).toFixed(2);
+            } else {
+                totPriceInput.value = originalPrice.toFixed(2);
+            }
+        });
+
+        //Hanterar tull regex
+        customsNumber.addEventListener('input', function () {
+            const customsRegex = /^[0-9]*$/;  
+            const value = customsNumber.value;
+            const lastChar = value.charAt(value.length - 1);
+
+            if (value.match(customsRegex)) {
+                console.log("matchar");
+            } else {
+                console.log("matchar inte");
+                customsNumber.value = value.slice(0, -1);
+            }
+        });
+
+
+        // Funktion för att validera både datum och adress
+        function validateForm() {
+            const selectedDate = new Date(deliveryInput.value);
+            const today = new Date();
+            selectedDate.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+
+            const isDateValid = deliveryInput.value && selectedDate >= today;
+            const isAddressFilled = addressInput.value.trim() !== "";
+
+            button.disabled = !(isDateValid && isAddressFilled);
+        }
+
+        // Kör validering när datumet ändras
+        deliveryInput.addEventListener("change", validateForm);
+
+        // Kör validering när adressen skrivs in
+        addressInput.addEventListener("input", validateForm);
+
+        // Kör direkt vid laddning för säkerhets skull
+        validateForm();
+    });
+</script>

@@ -1,0 +1,59 @@
+﻿@model List<hatmaker_team2.Models.User_Manage_Hat_Orders>
+
+@{
+	var groupedOrders = Model
+		.GroupBy(x => x.Order)
+		.ToList();
+
+	var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+}
+@if (TempData["SuccessMessage"] != null)
+{
+	<div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+<h3>Aktiva hattar/ordrar du är med i:</h3>
+
+<table class="table">
+	<thead>
+		<tr>
+			<th>Ordernummer</th>
+			<th>Hattar du hanterar</th>
+			<th>Status</th>
+			<th>Gå ur hatt/ar i order</th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var group in groupedOrders)
+		{
+			var order = group.Key;
+			<tr>
+				<td>@order.OID</td>
+				<td>
+					<ul>
+						@foreach (var item in group)
+						{
+							<li>@item.Hat.Name</li>
+						}
+					</ul>
+				</td>
+				<td>@order.Status</td>
+				<td>
+					<form method="post" asp-action="LeaveOrder" asp-controller="UserManageHatOrder">
+						<input type="hidden" name="orderId" value="@order.OID" />
+
+						@foreach (var item in group)
+						{
+							<label class="d-block">
+								<input type="checkbox" name="hatIds" value="@item.HatId" />
+								@item.Hat.Name
+							</label>
+						}
+
+						<button type="submit" class="btn btn-danger btn-sm mt-2">Lämna valda hattar</button>
+					</form>
+				</td>
+			</tr>
+		}
+	</tbody>
+</table>

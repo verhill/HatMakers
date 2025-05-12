@@ -1,0 +1,63 @@
+﻿@model Customer
+
+<h1>Redigera kunduppgifter</h1>
+
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-controller="Customer" asp-action="EditCustomerInfo" method="post">
+    <label style="margin-top: 1rem;">Förnamn: </label>
+    <input id="customerFirstname" style="width: 70%;" asp-for="@Model.Firstname" />
+    <br />
+    <label style="margin-top: 1rem;">Efternamn: </label>
+    <input id="customerLastname" style="width: 70%;" asp-for="@Model.Lastname" />
+    <br />
+    <label style="margin-top: 1rem;">Epost: </label>
+    <input id="customerEmail" style="width: 70%;" asp-for="@Model.Email" />
+    <br />
+    <label style="margin-top: 1rem;">Telefon: </label>
+    <input id="customerPhone" style="width: 70%;" asp-for="@Model.Phone" />
+    <br />
+    <label style="margin-top: 1rem;">Faktureringsadress: </label>
+    <input id="customerAddress" style="width: 70%;" asp-for="@Model.Address" />
+    <br />
+    <label style="margin-top: 1rem;">Stad: </label>
+    <input id="customerCity" style="width: 70%;" asp-for="@Model.City" />
+    <br />
+    <label style="margin-top: 1rem;">Land: </label>
+    <input id="customerCountry" style="width: 70%;" asp-for="@Model.Country" />
+    <br />
+
+    <input type="hidden" asp-for="@Model.CID" />
+
+    <br />
+    <button id="editCustomer" class="btn btn-success" style="margin-top: 1rem;" type="submit">Spara ändringar</button>
+</form>
+
+
+<button type="button" class="btn btn-danger" style="margin-top: 1rem;" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
+    Radera kund
+</button>
+
+@* Modal där kunden bekräftar borttagning av kunden *@
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteLabel">Bekräfta radering</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Stäng"></button>
+            </div>
+            <div class="modal-body">
+                Är du säker på att du vill radera kunden <strong>@Model.Firstname @Model.Lastname</strong>?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Avbryt</button>
+
+               
+                <form asp-controller="Customer" asp-action="DeleteCustomer" method="post">
+                    <input type="hidden" name="CID" value="@Model.CID" />
+                    <button type="submit" class="btn btn-danger">Ja, radera</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

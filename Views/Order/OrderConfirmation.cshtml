@@ -1,0 +1,115 @@
+﻿@model hatmaker_team2.Models.Order
+
+@{
+    ViewData["Title"] = "Orderbekräftelse";
+    Layout = "_Layout"; 
+}
+
+<h2>Orderbekräftelse</h2>
+
+<table id="order-info" class="table" style="width: 100%;">
+    <tbody>
+        <tr><td><strong>Ordernummer:</strong></td><td>@Model.OID</td></tr>
+        <tr><td><strong>Leveransdatum:</strong></td><td>@Model.DeliveryDate?.ToString("yyyy-MM-dd")</td></tr>
+        <tr><td><strong>Status:</strong></td><td>@Model.Status</td></tr>
+        <tr><td><strong>Expressleverans:</strong></td><td>@(Model.ExpressDelivery ? "Ja" : "Nej")</td></tr>
+    </tbody>
+</table>
+
+
+<table id="customer-info" class="table" style="width: 100%;">
+    <thead>
+        <tr><th colspan="2">Kundinformation</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Kundnummer:</td><td>@Model.Customer.CID</td></tr>
+        <tr><td>Förnamn:</td><td>@Model.Customer.Firstname</td></tr>
+        <tr><td>Efternamn:</td><td>@Model.Customer.Lastname</td></tr>
+        <tr><td>Leveransadress:</td><td>@Model.DeliveryAddress </td></tr>
+        <tr><td>Fakturaadress:</td><td>@Model.Customer.Address</td></tr>
+        <tr><td>Telefonnummer:</td><td>@Model.Customer.Phone</td></tr>
+    </tbody>
+</table>
+
+
+<table id="products-table" class="table table-bordered" style="width: 100%;">
+    <thead>
+        <tr>
+            <th>Produkt</th>
+            <th>á pris</th>
+            <th>Belopp</th>
+            <th>Moms %</th>
+            <th>Moms kr</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.HatsInOrder)
+        {
+            var price = item.Hat.Price;
+            var vatPercent = 25;
+            var vatAmount = price * vatPercent / 100;
+
+            <tr>
+                <td>@item.Hat.Name</td>
+                
+                <td>st</td>
+                <td>@price.ToString("F2") kr</td>
+           
+                <td>@vatPercent %</td>
+                <td>@vatAmount.ToString("F2") kr</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+<table id="summary-table" class="table" style="width: 100%;">
+    <tbody>
+        @{
+            var totalExVat = Model.HatsInOrder.Sum(h => h.Hat.Price);
+            var totalVat = totalExVat * 0.25;
+            var totalInclVat = totalExVat + totalVat;
+        }
+        <tr>
+            <td><strong>Totalbelopp inkl. moms:</strong></td>
+            <td><strong>@totalInclVat.ToString("F2") kr</strong></td>
+        </tr>
+    </tbody>
+</table>
+
+
+<button id="save-pdf" class="btn btn-success mt-3">
+    Ladda ner som PDF
+</button>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<script>
+    const filename = "@($"Order_{Model.OID}_{Model.Customer.Firstname}_{Model.Customer.Lastname}.pdf")";
+
+    document.getElementById('save-pdf').addEventListener('click', function () {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        let currentY = 20;
+
+        doc.setFontSize(16);
+        doc.text("Orderbekräftelse", 14, currentY);
+        currentY += 10;
+
+        doc.autoTable({ html: '#order-info', startY: currentY });
+        currentY = doc.lastAutoTable.finalY + 10;
+
+        doc.autoTable({ html: '#customer-info', startY: currentY });
+        currentY = doc.lastAutoTable.finalY + 10;
+
+        doc.autoTable({ html: '#products-table', startY: currentY });
+        currentY = doc.lastAutoTable.finalY + 10;
+
+        doc.autoTable({ html: '#summary-table', startY: currentY });
+
+        doc.save(filename);
+    });
+</script>
+

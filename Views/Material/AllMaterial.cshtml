@@ -1,0 +1,177 @@
+﻿@model List<hatmaker_team2.Models.Material>
+
+@{
+    ViewData["Title"] = "Materialbeställningar";
+    Layout = "_Layout";
+}
+
+<style>
+    .material-card {
+        border: 1px solid #ccc;
+        padding: 16px;
+        margin-bottom: 24px;
+        border-radius: 6px;
+        background-color: #f9f9f9;
+    }
+
+    .material-header {
+        background-color: #eee;
+        padding: 10px;
+        font-size: 1.2em;
+        font-weight: bold;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+    }
+
+    th, td {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    th {
+        background-color: #f0f0f0;
+        text-align: left;
+    }
+
+    .section-title {
+        font-weight: bold;
+        margin-top: 20px;
+    }
+
+    .total {
+        font-weight: bold;
+        margin-top: 12px;
+    }
+</style>
+
+<div id="pdf-content">
+
+<h2>Materialbeställningar</h2>
+
+@foreach (var material in Model)
+{
+    var standardHattar = material.MaterialInHat.Where(h => h.Hat != null && !h.Hat.IsSpecial).ToList();
+    var specialHattar = material.MaterialInHat.Where(h => h.Hat != null && h.Hat.IsSpecial).ToList();
+
+    <div class="material-card">
+        <div class="material-header">
+             @material.Name 
+        </div>
+
+        <div class="section-title">Standardhattar</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Hattnamn</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (standardHattar.Any())
+                {
+                    int index = 1;
+                    foreach (var item in standardHattar)
+                    {
+                        <tr>
+                            <td>@index</td>
+                            <td>@item.Hat?.Name</td>
+                        </tr>
+                        index++;
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="2">Inga standardhattar registrerade.</td></tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="section-title">Specialbeställningar</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Hattnamn</th>
+                    <th>Kvantitet</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (specialHattar.Any())
+                {
+                    int index = 1;
+                    foreach (var item in specialHattar)
+                    {
+                        <tr>
+                            <td>@index</td>
+                            <td>@item.Hat?.Name</td>
+                            <td>@item.Quantity</td>
+                        </tr>
+                        index++;
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="3">Inga specialhattar registrerade.</td></tr>
+                }
+            </tbody>
+        </table>
+
+        @{
+            decimal amount = 0;
+
+            foreach (var item in specialHattar)
+            {
+                if (decimal.TryParse(item.Quantity, out var parsed))
+                {
+                    amount += parsed;
+                }
+            }
+        }
+
+
+        <div class="section-title">Total mängd</div>
+        <table>
+            <tr>
+                <th>Mängd:</th>
+                <td>@amount</td>
+            </tr>
+        </table>
+
+
+    </div> 
+}
+
+</div>
+
+<button id="save-pdf" class="btn btn-success mt-3">
+    Ladda ner som PDF
+</button>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+    document.getElementById('save-pdf').addEventListener('click', async function () {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'pt', 'a4');
+
+        const element = document.getElementById('pdf-content');
+
+        await html2canvas(element, { scale: 2 }).then((canvas) => {
+            const imgData = canvas.toDataURL('image/png');
+
+            const imgProps = doc.getImageProperties(imgData);
+            const pdfWidth = doc.internal.pageSize.getWidth();
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+            doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            doc.save("Materialbeställning.pdf");
+        });
+    });
+</script>

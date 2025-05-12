@@ -1,0 +1,124 @@
+﻿
+
+@model HatViewModel
+
+<label class="align-content-center">Lägg till ny hatt</label>
+
+<form method="post" enctype="multipart/form-data" asp-action="AddHat">
+   
+    <div class="form-group row">
+       
+
+        <div class="form-group row">
+            <div class="col-sm-2">
+                <label>Namn:</label>
+            </div>
+            <div class="col-sm-4">
+                <input asp-for="Hat.Name" class="form-control" />
+                <span asp-validation-for="Hat.Name" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <div class="col-sm-2">
+                <label>Pris:</label>
+            </div>
+                <div class="col-sm-4">
+                <input asp-for="Hat.Price" class="form-control" />
+                <span asp-validation-for="Hat.Price" class="text-danger"></span>
+
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <div class="col-sm-2">
+                <label>Referensbild </label>
+            </div>
+            <div class="col-sm-4">
+                <input type="file" name="bildFil" class="form-control" />
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            <label>Material:</label>
+        </div>
+        <div class="col-sm-4 d-flex">
+            <select id="materialDropdown" class="form-control mr-2">
+                <option value="">-- Välj material --</option>
+                @foreach (var material in Model.Materials)
+                {
+                    <option value="@material.Value">@material.Text</option>
+                }
+            </select>
+            <button type="button" class="btn btn-success" onclick="addMaterial()">Lägg till</button>
+        </div>
+    </div>
+
+    
+    <div class="form-group row">
+        <div class="col-sm-2"></div>
+        <div class="col-sm-6">
+            <ul id="selectedMaterials" class="list-group"></ul>
+        </div>
+    </div>
+
+    <div id="hiddenMaterialInputs"></div>
+
+    <div class="form-group row">
+        <div class="offset-sm-2 col-sm-4">
+            <button type="submit" class="btn btn-primary">Lägg till hatt</button>
+        </div>
+    </div>
+
+</form>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation-unobtrusive@3.2.12/jquery.validate.unobtrusive.min.js"></script>
+
+    <script>
+        let selectedMaterials = [];
+
+        function addMaterial() {
+            const dropdown = document.getElementById("materialDropdown");
+            const selectedValue = dropdown.value;
+            const selectedText = dropdown.options[dropdown.selectedIndex].text;
+
+            if (!selectedValue || selectedMaterials.includes(selectedValue)) return;
+
+            selectedMaterials.push(selectedValue);
+
+            // Lägg till raden i listan
+            const li = document.createElement("li");
+            li.className = "list-group-item d-flex justify-content-between align-items-center";
+            li.id = `mat-${selectedValue}`;
+            li.innerHTML = `
+                ${selectedText}
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeMaterial('${selectedValue}')">Ta bort</button>
+            `;
+
+            document.getElementById("selectedMaterials").appendChild(li);
+
+            //Lägg till hidden input
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = "SelectedMaterialIds";
+            input.value = selectedValue;
+            input.id = `input-mat-${selectedValue}`;
+
+            document.getElementById("hiddenMaterialInputs").appendChild(input);
+        }
+
+        function removeMaterial(id) {
+            
+            selectedMaterials = selectedMaterials.filter(m => m !== id);
+
+            
+            document.getElementById(`mat-${id}`).remove();
+            document.getElementById(`input-mat-${id}`).remove();
+        }
+    </script>
+}

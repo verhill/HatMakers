@@ -1,0 +1,459 @@
+﻿    @model NewOrderViewModel
+<div class="text-center mb-3">
+    <h1>Skapa en ny beställning</h1>
+</div>
+@if (!Model.CustomerConfirmed)
+{
+    <div class="border shadow" style="padding: 1rem;">
+        <h4>Vem ska ordern skickas till?</h4>
+        <form asp-controller="Order" asp-action="SelectCustomerInNewOrder" method="get">
+            <select name="customerId">
+                <option value="">Ny kund</option>
+                @foreach (var customer in Model.AllCustomers)
+                {
+                    if (customer.IsActive)
+                    {
+                        <option value="@customer.CID">@customer.Firstname @customer.Lastname (@customer.Email)</option>
+                    }
+                }
+            </select>
+            <button class="btn btn-outline-primary" type="submit">Välj</button>
+        </form>
+
+
+        <form id="customerInfoForm" asp-controller="Order" asp-action="AddCustomerToOrder" method="post">
+            <label style="margin-top: 1rem;">Förnamn: </label>
+            <input id="customerFirstname" style="width: 70%;" asp-for="@Model.SelectedCustomer.Firstname" />
+            <br />
+            <label style="margin-top: 1rem;">Efternamn: </label>
+            <input id="customerLastname" style="width: 70%;" asp-for="@Model.SelectedCustomer.Lastname" />
+            <br />
+            <label style="margin-top: 1rem;">Epost: </label>
+            <input id="customerEmail" style="width: 70%;" asp-for="@Model.SelectedCustomer.Email" />
+            <span asp-validation-for="@Model.SelectedCustomer.Email" class="text-danger"></span>
+            <br />
+            <label style="margin-top: 1rem;">Telefon: </label>
+            <input id="customerPhone" style="width: 70%;" asp-for="@Model.SelectedCustomer.Phone" />
+            <span asp-validation-for="@Model.SelectedCustomer.Phone" class="text-danger"></span>
+            <br />
+            <label style="margin-top: 1rem;">Faktureringsadress: </label>
+            <input id="customerAddress" style="width: 70%;" asp-for="@Model.SelectedCustomer.Address" />
+            <br />
+            <label style="margin-top: 1rem;">Stad: </label>
+            <input id="customerCity" style="width: 70%;" asp-for="@Model.SelectedCustomer.City" />
+            <br />
+            <label style="margin-top: 1rem;">Land: </label>
+            <input id="customerCountry" style="width: 70%;" asp-for="@Model.SelectedCustomer.Country" />
+            <br />
+
+            <input type="hidden" asp-for="@Model.SelectedCustomer.CID" />
+
+
+            <br />
+            <button id="selectCustButton" class="btn btn-success" style="margin-top: 1rem;" type="submit">Gå vidare</button>
+        </form>
+    </div>
+}
+
+
+@if (Model.CustomerConfirmed)
+{
+    <div class="border shadow" style="padding: 1rem;">
+
+        <form asp-controller="Order" asp-action="AddHatToOrder" enctype="multipart/form-data" method="post">
+            <h5 class="text-decoration-underline">Orderinfo</h5>
+            <label style="margin-top: 1rem; font-weight: bold;">Skickas till kund: </label>
+            <input disabled style="width: 70%;" asp-for="@Model.CurrentOrder.Customer.Email" />
+            <br />
+
+            <label style="margin-top: 1rem; font-weight: bold;">Summa: </label>
+            <input readonly style="width: 20%;" asp-for="@Model.CurrentOrder.TotPrice" />
+            <br />
+
+            <h5 class="text-decoration-underline mt-5">Lägg till produkt</h5>
+            <div class="d-flex align-items-end gap-3 my-3">
+
+                <div>
+                    <label class="fw-bold">Hatt:</label>
+                    <select name="hatId" class="form-select">
+                        @foreach (var hat in Model.StandardHats)
+                        {
+                            if (!hat.IsSpecial && !hat.IsDeactivated)
+                            {
+                                <option value="@hat.HID">@hat.Name</option>
+                            }
+                        }
+                        <option value="0">-SPECIALBESTÄLLNING-</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label id="headsizeInput" class="fw-bold">Omkrets (cm):</label>
+                    <input class="form-control" type="text" name="headsize" />
+                </div>
+
+                <div>
+                    <label class="fw-bold">Höjd (cm):</label>
+                    <input id="heightInput" class="form-control" type="text" name="height" />
+                </div>
+
+            </div>
+
+
+            <div id="specialFields" style="display: none;" class="mb-3">
+                <label class="fw-bold mt-3">Namn på hatten:</label>
+                <input class="form-control" type="text" step="0.01" name="specialName" />
+                
+
+                <label class="fw-bold">Beskrivning:</label>
+                <textarea class="form-control" name="specialDescription" id="specialDescription" rows="3"></textarea>
+
+                <label class="fw-bold mt-3">Pris (kr):</label>
+                <input class="form-control" type="number" step="0.01" name="specialPrice" />
+
+                <label class="fw-bold mt-3">Bild:</label>
+                <input class="form-control" type="file" name="specialPicture" />
+
+              
+
+                @*Material val*@
+                <h5 class="fw-bold mt-2">Val av material:</h5>
+                <div class="border p-2">
+                    <div class="row g-2 align-items-end">
+                        <!-- Material + select -->
+                        <div class="col-5">
+                            <label class="fw-bold mb-1">Material:</label>
+                            <select class="form-select form-select-sm" id="selectedMateral">
+                                @foreach (Material material in Model.MaterialsInDb)
+                                {
+                                    <option value="@material.Name">@material.Name</option>
+                                }
+                            </select>
+                        </div>
+
+                        <!-- Kvantitet + input -->
+                        <div class="col-3" >
+                            <label class="fw-bold mb-1">Kvantitet:</label>
+                            <input class="form-control form-control-sm" type="number" step="0.5" id="materialQuantity" />
+                        </div>
+
+                        <div class="col-4">
+                            <button type="button" class="btn btn-primary btn-sm" id="materialButton">Lägg till material</button>
+                        </div>
+                    </div>
+
+                    
+
+                    <!-- Output -->
+                    <div class="mt-2">
+                        <label>Valt material</label>
+                        <textarea readonly class="form-control form-control-sm" name="materialArr" id="arrayOutput" rows="5"></textarea>
+                    </div>
+                </div>
+               
+        </div>
+
+
+
+
+            <input type="hidden" name="customerId" value="@Model.CurrentOrder.Customer?.CID" />
+            <input type="hidden" name="customerConfirmed" value="@Model.CustomerConfirmed.ToString().ToLower()" />
+
+
+            @foreach (var hat in Model.HatsInOrder)
+            {
+                <input type="hidden" name="addedHatIds" value="@hat.HID" />
+            }
+            @foreach (var och in Model.OrderContainsHats)
+            {
+                <input type="hidden" name="orderHat_HIDs" value="@och.Hat.HID" />
+                <input type="hidden" name="orderHat_HeadSizes" value="@och.HeadSize" />
+                <input type="hidden" name="orderHat_Heights" value="@och.Height" />
+
+            }
+
+            <button id="addHatButton" class="btn btn-success" type="submit">+ Lägg till produkt i order</button>
+
+            <br />
+            @Html.ValidationMessage("specialName", "", new { @class = "text-danger" }) <br />
+            @Html.ValidationMessage("specialDescription", "", new { @class = "text-danger" }) <br />
+            @Html.ValidationMessage("specialPrice", "", new { @class = "text-danger" }) <br />
+            @Html.ValidationMessage("materialArr", "", new { @class = "text-danger" })
+            @Html.ValidationMessage("specialPicture", "", new { @class = "text-danger" })
+
+
+
+           
+            
+        </form>
+        
+
+        <div class="mt-5" disabled style="width: 70%; height: 30%;">
+
+            <table class="table">
+                <thead>
+                    <tr style="font-size: 1rem;">
+                        <th>Produkt</th>
+                        <th>Omkrets (cm)</th>
+                        <th>Höjd (cm)</th>
+                        <th>Pris</th>
+                        <th>Bild</th>
+                        <th>Specialbeskrivning</th>
+                        <th>
+                            Radera
+                        </th>
+
+                    </tr>
+                </thead>
+                <form asp-controller="Order" asp-action="RemoveHatFromOrder" method="post">
+                <tbody>
+                        @for (int i = 0; i < Model.OrderContainsHats.Count; i++)
+                        {
+                            var och = Model.OrderContainsHats[i];
+                        <tr>
+                            <td>@och.Hat.Name</td>
+                            <td>@och.HeadSize</td>
+                            <td>@och.Height</td>
+                            <td>@och.Hat.Price</td>
+                            <td><img style="width: 100px; height: 100px;" src="@och.Hat.Picture" alt="Bild saknas" /></td>
+                                @if (och.Hat.IsSpecial)
+                                {
+                                    
+                                <td>@och.Hat.SpecialDescription</td>
+                                }
+                                else
+                                {
+                                     <td></td>
+                                }
+
+
+                            <!-- Knapp som skickar index för vilken hatt som ska tas bort -->
+                            <td>
+                                <button name="removeIndex" value="@i" class="btn btn-outline-danger" type="submit">Ta bort</button>
+                            </td>
+
+                            <!-- Dold info för hela listan -->
+                            <input type="hidden" name="orderHat_HIDs" value="@och.Hat.HID" />
+                            <input type="hidden" name="orderHat_HeadSizes" value="@och.HeadSize" />
+                            <input type="hidden" name="orderHat_Heights" value="@och.Height" />
+                        </tr>
+                        }
+                </tbody>
+
+                <!-- Info om kunden och beställning -->
+                <input type="hidden" name="customerId" value="@Model.CurrentOrder.Customer?.CID" />
+                <input type="hidden" name="customerConfirmed" value="@Model.CustomerConfirmed.ToString().ToLower()" />
+                <input type="hidden" name="express" value="@Model.CurrentOrder.ExpressDelivery.ToString().ToLower()" />
+
+                    @foreach (var h in Model.HatsInOrder)
+                    {
+                    <input type="hidden" name="addedHatIds" value="@h.HID" />
+                    }
+                </form>
+
+                
+            </table>
+
+
+        </div>
+
+
+    </div>
+
+    <form asp-controller="Order" asp-action="AddOrder" method="post">
+
+        @if (Model.HatsInOrder.Any())
+        {
+            <button class="btn btn-outline-success" style="margin-top: 1rem;" type="submit">Gå vidare</button>
+        }
+
+        <input type="hidden" name="customerId" value="@Model.CurrentOrder.Customer.CID" />
+
+        @for (int i = 0; i < Model.OrderContainsHats.Count; i++)
+        {
+            <input type="hidden" name="hatIds[@i]" value="@Model.HatsInOrder[i].HID" />
+            <input type="hidden" name="headSizes[@i]" value="@Model.OrderContainsHats[i].HeadSize" />
+            <input type="hidden" name="heights[@i]" value="@Model.OrderContainsHats[i].Height" />
+            <input type="hidden" name="descriptions[@i]" value="@Model.HatsInOrder[i].SpecialDescription" />
+        }
+
+
+    </form>
+        
+}
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("customerInfoForm");
+    const submitButton = document.getElementById("selectCustButton");
+
+    const fieldIds = [
+        "customerFirstname",
+        "customerLastname",
+        "customerEmail",
+        "customerPhone",
+        "customerAddress",
+        "customerCity",
+        "customerCountry"
+    ];
+
+    // Hämta elementen och filtrera bort null
+    const requiredFields = fieldIds
+        .map(id => document.getElementById(id))
+        .filter(Boolean); // Tar bort fält som inte hittats
+
+    function checkFields() {
+        const allFilled = requiredFields.every(input => input.value.trim() !== "");
+        if (submitButton) {
+            submitButton.disabled = !allFilled;
+        }
+    }
+
+    // Kör kontrollen vid start
+    checkFields();
+
+    // Lägg till eventlyssnare på alla fält
+    requiredFields.forEach(input => {
+        input.addEventListener("input", checkFields);
+    });
+});
+
+
+     document.addEventListener("DOMContentLoaded", function () {
+        const headsizeInput = document.querySelector('input[name="headsize"]');
+        const heightInput = document.querySelector('input[name="height"]');
+        const addHatButton = document.getElementById('addHatButton');
+
+        console.debug("headsizeInput:", headsizeInput);
+        console.debug("heightInput:", heightInput);
+        console.debug("addHatButton:", addHatButton);
+
+        function toggleButton() {
+            if (!headsizeInput || !heightInput || !addHatButton) {
+                console.debug("Ett eller flera element hittades inte. Avbryter toggleButton.");
+                return;
+            }
+
+            const headsizeValue = headsizeInput.value.trim();
+            const heightValue = heightInput.value.trim();
+
+            const validNumberRegex = /^[0-9,]+$/;
+
+            const headsizeValid = validNumberRegex.test(headsizeValue);
+            const heightValid = validNumberRegex.test(heightValue);
+
+            const headsizeFilled = headsizeValue !== "" && headsizeValid;
+            const heightFilled = heightValue !== "" && heightValid;
+
+            console.debug("✏ headsizeFilled:", headsizeFilled, "Valid:", headsizeValid);
+            console.debug("heightFilled:", heightFilled, "Valid:", heightValid);
+
+            addHatButton.disabled = !(headsizeFilled && heightFilled);
+            console.debug("Knappens disabled-status:", addHatButton.disabled);
+        }
+
+        // Kör en gång vid sidladdning
+        toggleButton();
+
+        // Kör varje gång användaren skriver något
+        if (headsizeInput) {
+            headsizeInput.addEventListener("input", toggleButton);
+        }
+
+        if (heightInput) {
+            heightInput.addEventListener("input", toggleButton);
+        }
+    });
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    // För hantering av specialfält
+    const hatSelect = document.querySelector("select[name='hatId']");
+    const specialFields = document.getElementById("specialFields");
+
+    if (hatSelect && specialFields) {
+        function toggleSpecialFields() {
+            specialFields.style.display = hatSelect.value === "0" ? "block" : "none";
+        }
+
+        hatSelect.addEventListener("change", toggleSpecialFields);
+        toggleSpecialFields();
+    }
+
+    // För validering av beskrivning och pris
+    const form = document.querySelector("form");
+    const specialDescriptionInput = document.querySelector("#specialDescription");
+    const specialPriceInput = document.querySelector("input[name='specialPrice']");
+    const submitButton = document.querySelector("button[type='submit']");
+
+    function checkSpecialOrderFields() {
+        if (specialDescriptionInput && specialPriceInput) {
+            const descriptionFilled = specialDescriptionInput.value.trim() !== "";
+            const priceFilled = specialPriceInput.value.trim() !== "";
+            submitButton.disabled = !(descriptionFilled && priceFilled);
+        }
+    }
+
+    if (specialDescriptionInput && specialPriceInput) {
+        specialDescriptionInput.addEventListener("input", checkSpecialOrderFields);
+        specialPriceInput.addEventListener("input", checkSpecialOrderFields);
+        checkSpecialOrderFields();
+    }
+
+    // Kopiera beskrivning till varje special-rad i tabellen
+    const specialInputs = document.querySelectorAll(".special-input");
+
+    if (specialDescriptionInput && specialInputs.length > 0) {
+        specialDescriptionInput.addEventListener("input", function () {
+            specialInputs.forEach(input => {
+                input.value = specialDescriptionInput.value;
+            });
+        });
+    }
+
+
+});
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const buttonMaterial = document.getElementById("materialButton");
+        const selectedMateral = document.getElementById("selectedMateral");
+        const materialQuantity = document.getElementById("materialQuantity");
+        const arrayOutput = document.getElementById("arrayOutput");
+
+        // Extra säkerhet om knappen inte finns
+        if (!buttonMaterial || !selectedMateral || !materialQuantity || !arrayOutput) {
+            console.warn("Ett eller flera element hittades inte i DOM.");
+            return;
+        }
+
+        const materialArr = [];
+        const quantityArr = [];
+
+        buttonMaterial.addEventListener('click', function () {
+            const material = selectedMateral.value;
+            const quantity = materialQuantity.value;
+
+            if (material && quantity) {
+                materialArr.push(material + ',' );
+                quantityArr.push(quantity + ',')
+                console.log(materialArr);
+                console.log(quantityArr);
+
+                // Töm textarea innan vi skriver ut allt på nytt
+                arrayOutput.value = "";
+
+                for (let i = 0; i < materialArr.length; i++) {
+                    arrayOutput.value += materialArr[i] + quantityArr[i] + "\n";
+                }
+
+              
+            }
+        });
+    });
+
+ 
+            
+
+</script>
+

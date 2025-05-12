@@ -1,0 +1,53 @@
+﻿@model Hat
+
+
+
+  
+<h1>Redigera hatt</h1>
+<form class="border shadow" style="padding: 1rem;" asp-action="EditHat" method="post">
+       <div style="padding: 0.5rem">
+    <label>Namn: </label>
+        <input id="hatName" name="Name" asp-for="Name"/>
+    <span asp-validation-for="Name" class="text-danger"></span>
+        <br />
+    </div>
+    <div style="padding: 0.5rem">
+        <label>Pris: </label>
+        <input id="hatPrice" name="Price" asp-for="Price" />
+    <span asp-validation-for="Price" class="text-danger"></span>
+        <br />
+        </div>
+
+    <div style="padding: 0.5rem">
+
+      
+        </div>
+        <input asp-for="HID" type="hidden" />
+        <br />
+    <button class="btn btn-primary" id="saveHat" type="submit">Spara ändringar</button>
+
+    
+    </form>
+
+<h2 style="margin-top: 20px;">Ändra Bild:</h2>
+
+@if (!string.IsNullOrEmpty(Model.Picture))
+{
+    <img src="@Model.Picture" alt="Hat image" style="max-height: 200px; margin-top: 10px;" />
+}
+
+<div class="border shadow" style="padding: 1rem;">
+
+
+    <form asp-action="UpdateHatPicture" method="post" enctype="multipart/form-data">
+        <input type="file" name="imgFile" accept="image/*" />
+        <input type="hidden" name="HID" value="@Model.HID" />
+        <button class="btn btn-primary" type="submit">Ladda upp</button>
+    </form>
+
+</div>
+
+<form asp-action="DeleteHat" method="post">
+    <input type="hidden" name="HID" value="@Model.HID" />
+    <button class="btn btn-danger" type="submit">Radera hatt</button>
+</form>

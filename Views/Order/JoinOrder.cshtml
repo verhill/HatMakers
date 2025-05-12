@@ -1,0 +1,106 @@
+﻿@model hatmaker_team2.Models.User_Order_ViewModel
+
+@{
+    ViewData["Title"] = "Välj hatt/hattar i ordern du vill gå med i";
+    var userHatLinks = ViewBag.UserHatLinks as List<hatmaker_team2.Models.User_Manage_Hat_Orders>;
+    var currentUser = Model.AllUsers.FirstOrDefault(u => u.Id == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+@if (TempData["InfoMessage"] != null)
+{
+    <div class="alert alert-info">@TempData["InfoMessage"]</div>
+}
+
+@{
+    var order = Model.AllOrders.FirstOrDefault();
+}
+@if (order != null)
+{
+    <div class="order-container border p-3 mb-4">
+        <h3>Ordernummer: @order.OID</h3>
+        <p>Status: <strong>@order.Status</strong></p>
+        <form method="post" asp-action="UpdateDeliveryDateForOrder" asp-controller="Order">
+            <p>Leveransdatum: @order.DeliveryDate?.ToShortDateString()</p>
+            <p>Uppdatera Leveransdatum: <input id="delivery" type="date" name="deliveryDate" style="width: 40%;" asp-for="@order.DeliveryDate" /> <button type="submit" class="btn btn-outline-primary">Spara nytt datum</button></p>
+            <input type="hidden" name="orderID" value="@order.OID" />
+        </form>
+        <p>Totala priset: @order.TotPrice</p>
+
+        <!-- HATTVALSFORMULÄR -->
+        <h5>Välj hattar att hantera:</h5>
+        <form method="post" asp-action="JoinOrderAction" asp-controller="Order">
+            <input type="hidden" name="orderId" value="@order.OID" />
+            <ul>
+                @foreach (var orderHat in order.HatsInOrder)
+                {
+                    var isAlreadyAssigned = userHatLinks.Any(u =>
+                    u.OrderId == order.OID && u.HatId == orderHat.HatId);
+
+                    <li>
+                        <label>
+                            <select name="SelectedUserIds[@orderHat.HatId]" class="form-control w-auto d-inline-block" @(isAlreadyAssigned ? "disabled" : "")>
+                                @if (currentUser?.IsAdmin == true)
+                                {
+                                    <option value=""> Välj användare </option>
+                                    @foreach (var user in Model.AllUsers)
+                                    {
+                                        <option value="@user.Id">@user.Firstname @user.Lastname</option>
+                                    }
+                                }
+                                else
+                                {
+                                    <option value="@currentUser.Id" selected>@currentUser.Firstname @currentUser.Lastname</option>
+                                }
+                            </select>
+                            <input type="hidden" name="SelectedHatIds" value="@orderHat.HatId" />
+
+                            <span class="fw-bold">@orderHat.Hat.Name</span>
+                            . Storlek: (@orderHat.HeadSize cm, @orderHat.Height cm) | Specialbeskrivning: @orderHat.Hat.SpecialDescription | Material: @foreach (Hat_Made_Of_Material hat_Made_Of_Material in @orderHat.Hat.MaterialUsedInHat)
+                            {
+                                <span>@hat_Made_Of_Material.Material.Name, </span>
+                            }
+                            @if (isAlreadyAssigned)
+                            {
+                                var assignedUser = userHatLinks.FirstOrDefault(u =>
+                                u.OrderId == order.OID && u.HatId == orderHat.HatId)?.UserId;
+
+                                if (assignedUser == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)
+                                {
+                                    <span class="text-muted">(Du hanterar redan denna hatt)</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">(Denna hatt hanteras av en annan användare)</span>
+                                }
+                            }
+                        </label>
+                    </li>
+                }
+            </ul>
+
+            @if (order.Status != "Avslutad")
+            {
+                <button type="submit" class="btn btn-outline-primary">Tilldela order</button>
+            }
+            
+             else
+            {
+                <p class="text-muted">Denna order är redan avslutad.</p>
+            }
+        </form>
+    </div>
+}
+else
+{
+    <p>Inga ordrar finns i systemet</p>
+}

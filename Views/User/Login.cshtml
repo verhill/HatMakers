@@ -1,0 +1,37 @@
+﻿@model LoginViewModel
+@{
+    ViewBag.Title = "Login";
+}
+
+<div class="d-flex align-items-center justify-content-center min-vh-100">
+    <div class="card shadow-lg p-4" style="width: 400px;">
+        <h2 class="text-center mb-4">Välkommen tillbaka!</h2>
+
+        <div asp-validation-summary="All" class="text-danger"></div>
+        
+        <form method="post" asp-action="LogIn">
+            <div class="mb-3">
+                <label asp-for="Epost" class="form-label">E-postadress</label>
+                <input asp-for="Epost" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Losenord" class="form-label">Lösenord</label>
+                <input type="password" asp-for="Losenord" class="form-control" />
+            </div>
+
+            <div class="form-check mb-4">
+                <input asp-for="RememberMe" class="form-check-input" id="rememberMe" />
+                <label class="form-check-label" for="rememberMe">
+                    Kom ihåg mig
+                </label>
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary btn-lg">Logga in</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+

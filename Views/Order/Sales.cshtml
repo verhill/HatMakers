@@ -1,0 +1,208 @@
+﻿@model hatmaker_team2.Models.SalesDashboardViewModel
+
+@{
+    ViewData["Title"] = "Försäljningsstatistik";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<!-- Add filter form -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>Filtrera statistik</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" asp-action="Sales" asp-controller="Order" class="row g-3">
+            <div class="col-md-5">
+                <label for="StartDate" class="form-label">Från datum</label>
+                <input type="date" id="StartDate" name="StartDate" class="form-control"
+                       value="@(Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "")" />
+            </div>
+            <div class="col-md-3">
+                <label for="EndDate" class="form-label">Till datum</label>
+                <input type="date" id="EndDate" name="EndDate" class="form-control"
+                       value="@(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "")" />
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">Filtrera</button>
+                <a href="@Url.Action("Sales", "Order")" class="btn btn-secondary">Återställ</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Total försäljning</h5>
+            </div>
+            <div class="card-body">
+                <h2>@Model.TotalCompletedSales.ToString("C")</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Antal avslutade ordrar</h5>
+            </div>
+            <div class="card-body">
+                <h2>@Model.CompletedOrderCount</h2>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Försäljning per månad</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Månad</th>
+                                <th>Antal ordrar</th>
+                                <th>Total försäljning</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var monthData in Model.MonthlySales)
+                            {
+                                <tr>
+                                    <td>@monthData.MonthName</td>
+                                    <td>@monthData.OrderCount</td>
+                                    <td>@monthData.TotalSales.ToString("C")</td>
+                                </tr>
+                            }
+                            @if (!Model.MonthlySales.Any())
+                            {
+                                <tr>
+                                    <td colspan="3" class="text-center">Inga avslutade ordrar att visa</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Försäljning per kvartal</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Kvartal</th>
+                                <th>Antal ordrar</th>
+                                <th>Total försäljning</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var quarterData in Model.QuarterlySales)
+                            {
+                                <tr>
+                                    <td>@quarterData.QuarterName</td>
+                                    <td>@quarterData.OrderCount</td>
+                                    <td>@quarterData.TotalSales.ToString("C")</td>
+                                </tr>
+                            }
+                            @if (!Model.QuarterlySales.Any())
+                            {
+                                <tr>
+                                    <td colspan="3" class="text-center">Inga avslutade ordrar att visa</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Försäljning per år</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>År</th>
+                                <th>Antal ordrar</th>
+                                <th>Total försäljning</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var yearData in Model.YearlySales)
+                            {
+                                <tr>
+                                    <td>@yearData.Year</td>
+                                    <td>@yearData.OrderCount</td>
+                                    <td>@yearData.TotalSales.ToString("C")</td>
+                                </tr>
+                            }
+                            @if (!Model.YearlySales.Any())
+                            {
+                                <tr>
+                                    <td colspan="3" class="text-center">Inga avslutade ordrar att visa</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Senast avslutade ordrar</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Leveransdatum</th>
+                                <th>Kund</th>
+                                <th>Försäljningsbelopp</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in Model.RecentCompletedOrders)
+                            {
+                                <tr>
+                                    <td>@order.OID</td>
+                                    <td>@(order.DeliveryDate?.ToString("yyyy-MM-dd") ?? "-")</td>
+                                    <td>@(order.Customer?.Email ?? "-")</td>
+                                    <td>@order.TotPrice.ToString("C")</td>
+                                </tr>
+                            }
+                            @if (!Model.RecentCompletedOrders.Any())
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center">Inga avslutade ordrar att visa</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+

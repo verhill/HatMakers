@@ -1,0 +1,35 @@
+﻿@model hatmaker_team2.Models.CreateUserViewModel
+
+@{
+    ViewData["Title"] = "Skapa användare";
+}
+<h2>Lägg till ny användare</h2>
+<div asp-validation-summary="All" class="text-danger"></div>
+<form asp-controller="User" asp-action="CreateUserInDb" method="post">
+    <div class="form-group">
+        <label>Förnamn</label>
+        <input asp-for="Firstname" class="form-control" />
+        <span asp-validation-for="Firstname" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label>Efternamn</label>
+        <input asp-for="Lastname" class="form-control" />
+        <span asp-validation-for="Lastname" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label>Email</label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label>Lösenord</label>
+        <input asp-for="Password" class="form-control" type="password" />
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+    <div class="form-group form-check">
+        <input asp-for="IsAdmin" class="form-check-input" />
+        <label>Ska vara admin</label>
+    </div>
+    <button type="submit" class="btn btn-primary">Skapa användare</button>
+</form>
+

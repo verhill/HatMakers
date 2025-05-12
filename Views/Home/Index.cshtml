@@ -1,0 +1,193 @@
+﻿@model CalenderViewModel
+
+@{
+    ViewData["Title"] = "Kalender";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"]</title>
+
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
+
+    <style>
+        .calendar-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            margin-top: 40px;
+            gap: 40px;
+            padding: 0 40px;
+        }
+
+        #calendar {
+            flex: 1;
+            min-width: 0;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .colorIndication {
+            flex-shrink: 0;
+            max-width: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding-top: 10px;
+        }
+
+
+        .colorIndication-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .colorIndication-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border-radius: 3px;
+        }
+
+        .fc-list-event td,
+        .fc-list-event .fc-event-title,
+        .fc-list-event .fc-event-time {
+            color: white !important;
+        }
+
+        .fc .fc-list-event:hover td {
+            background-color: inherit !important;
+            cursor: pointer;
+        }
+
+        .fc-event:hover, .fc-daygrid-event:hover {
+            cursor: pointer;
+        }
+
+        .fc .fc-list-event {
+            cursor: default;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">@ViewData["Title"]</h1>
+
+    <div class="calendar-container">
+        <div id="calendar"></div>
+
+        <div class="colorIndication">
+            <div class="colorIndication-item">
+                <div class="colorIndication-color" style="background-color: grey;"></div>
+                <span>Ej behandlad</span>
+            </div>
+            <div class="colorIndication-item">
+                <div class="colorIndication-color" style="background-color: blue;"></div>
+                <span>Påbörjad</span>
+            </div>
+            <div class="colorIndication-item">
+                <div class="colorIndication-color" style="background-color: black;"></div>
+                <span>Avslutad</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            var calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+                locale: 'sv',
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'monthView,listQuarter,yearView'
+                },
+                buttonText: {
+                    today: 'Dagens datum'
+                },
+                events: '/Calender/GetOrderCalender',
+                eventDidMount: function (info) {
+                    var status = info.event.extendedProps.status;
+                    if (status === "Ej behandlad") {
+                        info.el.style.backgroundColor = 'grey';
+                    } else if (status === "Påbörjad") {
+                        info.el.style.backgroundColor = 'blue';
+                    } else if (status === "Avslutad") {
+                        info.el.style.backgroundColor = 'black';
+                    }
+                },
+                eventClick: function (info) {
+                    var status = info.event.extendedProps.status;
+                    if (status === "Avslutad") {
+                        info.jsEvent.preventDefault();
+                        return;
+                    }
+
+                    var orderID = info.event.id;
+                    window.location.href = '/Order/JoinOrder?orderID=' + orderID;
+                },
+                editable: true,
+                eventDrop: function (info) {
+                    const orderID = info.event.id;
+                    const newDate = info.event.start;
+
+                    const formattedDate = `${newDate.getFullYear()}-${(newDate.getMonth() + 1).toString().padStart(2, '0')}-${newDate.getDate().toString().padStart(2, '0')}`;
+
+                    fetch('/Order/UpdateDeliveryForOrderDragAndDrop', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            orderID: orderID,
+                            deliveryDate: formattedDate
+                        })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (!data.success) {
+                                alert("Kunde inte uppdatera datumet.");
+                                info.revert();
+                            } else {
+                                calendar.refetchEvents();
+                            }
+                        })
+                        .catch(() => {
+                            alert("Ett fel inträffade.");
+                            info.revert();
+                        });
+                },
+                views: {
+                    yearView: {
+                        type: 'listYear', buttonText: 'År'
+                    },
+                    monthView: {
+                        type: 'dayGridMonth', buttonText: 'Månad'
+                    },
+                    listQuarter: {
+                        type: 'list', duration: {
+                            months: 3
+                        },
+                        buttonText: 'Kvartal'
+                    }
+                }
+            });
+
+            calendar.render();
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+

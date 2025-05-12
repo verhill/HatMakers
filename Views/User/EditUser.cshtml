@@ -1,0 +1,17 @@
+﻿@model User
+
+<h1>Redigera användare</h1>
+
+<div asp-validation-summary="All" class="text-secondary"></div>
+
+<form asp-controller="User" asp-action="EditUserInfo" method="post">
+    <label style="margin-top: 1rem;">Förnamn: </label>
+    <input id="customerFirstname" style="width: 70%;" asp-for="@Model.Firstname" />
+    <br />
+    <label style="margin-top: 1rem;">Efternamn: </label>
+    <input id="customerLastname" style="width: 70%;" asp-for="@Model.Lastname" />
+    <br />
+    <input type="hidden" asp-for="@Model.Id" />
+    <br />
+    <button id="editUser" class="btn btn-success" style="margin-top: 1rem;" type="submit">Spara ändringar</button>
+</form>

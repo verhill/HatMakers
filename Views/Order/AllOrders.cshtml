@@ -1,0 +1,173 @@
+﻿@model List<hatmaker_team2.Models.Order>
+
+@{
+    ViewData["Title"] = "Orderhistorik";
+}
+
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/DragAndDrop.css" />
+</head>
+
+<body>
+    <h1>@ViewData["Title"]</h1>
+    <form method="get" asp-action="AllOrders">
+        
+
+        <label for="hatFilter">Filtrera hattar:</label>
+        <select name="hatFilter" id="hatFilter">
+            <option value="">Alla Hattar</option>
+            @foreach (var hatName in Model.SelectMany(o => o.HatsInOrder)
+            .Select(h => h.Hat?.Name)
+            .Where(n => !string.IsNullOrEmpty(n))
+            .Distinct())
+            {
+                <option value="@hatName">@hatName</option>
+            }
+        </select>
+
+        <label for="customerFilter">Filtrera kunder:</label>
+        <select name="customerFilter" id="customerFilter">
+            <option value="">Alla Kunder</option>
+            @foreach (var customer in Model.Select(o => o.Customer?.Email)
+            .Where(email => !string.IsNullOrEmpty(email))
+            .Distinct())
+            {
+                <option value="@customer">@customer</option>
+            }
+        </select>
+
+        <label for="startDate">Från datum:</label>
+        <input type="date" name="startDate" id="startDate" />
+
+        <label for="endDate">Till datum:</label>
+        <input type="date" name="endDate" id="endDate" />
+
+        <button type="submit">Filtrera</button>
+
+    </form>
+
+    <form method="get" asp-action="LeaveOrderPage" asp-controller="UserManageHatOrder" class="d-inline">
+        <button type="submit" class="btn btn-primary">Mina Ordrar</button>
+    </form>
+
+    <div class="row">
+        <!-- Ej behandlade -->
+        <div class="col-md-4" id="ejBehandlad" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <h3>Ej Behandlade</h3>
+            <div id="ordersEjBehandlad">
+                @foreach (var order in Model.Where(o => o.Status == "Ej behandlad"))
+                {
+                    <div id="order-@order.OID" class="order box" draggable="true" ondragstart="drag(event)" data-status="Ej behandlad">
+                        <div class="summary">
+                            <p><strong>Ordernummer:</strong> @order.OID</p>
+                            <form method="get" asp-action="JoinOrder" asp-controller="Order" class="d-inline">
+                                <input type="hidden" name="orderID" value="@order.OID" />
+                                <button type="submit" class="btn btn-primary">Till Order</button>
+
+                            </form>
+
+                            <form method="get" asp-action="OrderConfirmation" asp-controller="Order">
+                                <input type="hidden" name="id" value="@order.OID" />
+                                <button type="submit" class="btn btn-primary">Orderbekräftelse</button>
+                            </form> 
+                        </div>
+                        <div class="order-details">
+                            <p><strong>Leveransdatum:</strong> @order.DeliveryDate</p>
+                            <p><strong>Status:</strong> @order.Status</p>
+                            <p><strong>Totalt pris:</strong> @order.TotPrice</p>
+                            <p><strong>Skapad av:</strong> @order.User?.UserName</p>
+                            <p><strong>Hat: </strong> @foreach (var hatOrder in order.HatsInOrder)
+                                {
+                                    @hatOrder.Hat?.Name;
+                                    <br />
+                                }   
+                            </p>
+                            <p><strong>Kund:</strong> @order.Customer?.Email</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Påbörjade -->
+        <div class="col-md-4" id="paborjad" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <h3>Påbörjade</h3>
+            <div id="ordersPaborjad">
+                @foreach (var order in Model.Where(o => o.Status == "Påbörjad"))
+                {
+                    <div id="order-@order.OID" class="order box" draggable="true" ondragstart="drag(event)" data-status="Påbörjad">
+                        <div class="summary">
+                            <p><strong>Ordernummer:</strong> @order.OID</p>
+                            <form method="get" asp-action="JoinOrder" asp-controller="Order" class="d-inline">
+                                <input type="hidden" name="orderID" value="@order.OID" />
+                                <button type="submit" class="btn btn-primary">Till Order</button>
+                            </form>
+                        </div>
+                        <div class="order-details">
+                            <p><strong>Leveransdatum:</strong> @order.DeliveryDate</p>
+                            <p><strong>Status:</strong> @order.Status</p>
+                            <p><strong>Totalt pris:</strong> @order.TotPrice</p>
+                            <p><strong>Skapad av:</strong> @order.User?.UserName</p>
+                            <p>
+                                <strong>Hat: </strong> @foreach (var hatOrder in order.HatsInOrder)
+                                {
+                                    @hatOrder.Hat?.Name
+                                    ;
+                                    <br />
+                                }
+                            </p>
+                            <p><strong>Kund:</strong> @order.Customer?.Email</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Avslutade -->
+        <div class="col-md-4" id="avslutad" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <h3>Avslutade</h3>
+            <div id="ordersAvslutad">
+                @foreach (var order in Model.Where(o => o.Status == "Avslutad"))
+                {
+                    <div id="order-@order.OID" class="order box" draggable="true" ondragstart="drag(event)" data-status="Avslutad">
+                        <div class="summary">
+                            <p><strong>Ordernummer:</strong> @order.OID</p>
+                            <form method="get" asp-action="JoinOrder" asp-controller="Order" class="d-inline">
+                                <input type="hidden" name="orderID" value="@order.OID" />
+                                 <button type="submit" style="cursor: not-allowed" class="btn btn-primary" disabled>Till Order</button>
+                            </form>
+                            <form method="get" asp-action="GetWaybillPDF" asp-controller="Order" class="d-inline">
+                                <input type="hidden" name="orderID" value="@order.OID" />
+                                <button type="submit" class="btn btn-primary">Ladda ned Fraktsedel</button>
+                            </form>
+                        </div>
+                        <div class="order-details">
+                            <p><strong>Leveransdatum:</strong> @order.DeliveryDate</p>
+                            <p><strong>Status:</strong> @order.Status</p>
+                            <p><strong>Totalt pris:</strong> @order.TotPrice</p>
+                            <p><strong>Skapad av:</strong> @order.User?.UserName</p>
+                            <p>
+                                <strong>Hat: </strong> @foreach (var hatOrder in order.HatsInOrder)
+                                {
+                                    @hatOrder.Hat?.Name
+                                    ;
+                                    <br />
+                                }
+                            </p>
+                            <p><strong>Kund:</strong> @order.Customer?.Email</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <script src="~/js/DragAndDrop.js"></script>
+
+</body>
+</html>
